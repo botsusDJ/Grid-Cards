@@ -1,4 +1,4 @@
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 const sampleCards = [
   {
     id: 1,
@@ -98,6 +98,7 @@ function Card({ card, onLikeToggle }) {
 
 export default function App() {
   const [cards, setCards] = useState(sampleCards);
+  const [sortMethod, setSortMethod] = useState("")
 
   const handleLikeToggle = (cardId) => {
     setCards(prevCards => 
@@ -106,7 +107,25 @@ export default function App() {
       )
     );
   };
+
+  const handleSortMethodChange = (event) => {
+    setSortMethod(event.target.value); 
+  };
+
+  useEffect(() => {
+    let sortedCards = [...cards]
+
+    if (sortMethod === "lowToHigh") {
+      sortedCards.sort((a, b) => a.price - b.price)
+    } else if (sortMethod === "highToLow") {
+      sortedCards.sort((a, b) => b.price - a.price)
+    } else if (sortMethod === "a-z") {
+      sortedCards.sort((a, b) => a.title.localeCompare(b.title))
+    } 
+    setCards(sortedCards)
+  }, [sortMethod])
   
+
   const totalLikedCost = cards.filter(card => card.isLiked).reduce((sum, card) => sum + card.price, 0);
 
   return (
@@ -118,11 +137,12 @@ export default function App() {
             <h2 id="explore" className="section-title">
               Explore
             </h2>
-            <input
-              className="input"
-              type="search"
-              placeholder="Search cards by title..."
-            />
+            <select value={sortMethod} onChange={handleSortMethodChange}>
+              <option value="">Sort by...</option>
+              <option value="lowToHigh">Price: Low to High</option>
+              <option value="highToLow">Price: High to Low</option>
+              <option value="a-z">Title: A-Z</option>
+            </select>
           </div>
           <div className="grid">
             {cards.map((c) => (<Card key={c.id} card={c} onLikeToggle={handleLikeToggle}/>))}
