@@ -1,4 +1,5 @@
 import { use, useEffect, useState } from "react";
+import { ModalComp } from "./components/ModalComp";
 const sampleCards = [
   {
     id: 1,
@@ -105,8 +106,11 @@ function ViewModal({ isVisible, onCancel, card, onLikeToggle}) {
   if (!isVisible) return null;
 
   return (
-    <div className="modal">
-      <div className="card modal-size">
+    <ModalComp
+      title=""
+      containerClassName=""
+      onClose={onCancel}
+    >
         <div className="card-media">
           <img src={card.image} alt={`${card.title}.png`} loading="lazy" />
           <span className="badge">{card.tag}</span>
@@ -127,8 +131,36 @@ function ViewModal({ isVisible, onCancel, card, onLikeToggle}) {
             <button className="btn" onClick={onCancel}>Cancel</button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalComp>
+  );
+}
+
+function AddModal({ isVisible, onConfirm, onCancel}) {
+  if (!isVisible) return null;
+
+  return (
+    <ModalComp
+      title={"Add Card"}
+      containerClassName=""
+      onClose={onCancel}
+    >
+        <div>
+          <label>Title</label>
+          <input id="title" placeholder="Enter Cards Title" type="text"/>
+          <label>Description</label>
+          <input id="description" placeholder="Enter Cards Description" type="text"/>
+          <label>Image</label>
+          <input id="image" placeholder="Enter Cards Image" type="text"/>
+          <label>Tag</label>
+          <input id="tag" placeholder="Enter Cards Tag" type="text"/>
+          <label>Price</label>
+          <input id="price" placeholder="Enter Cards Price" type="number"/><span>$</span>
+        </div>
+        <div className="modal-actions">
+          <button className="btn primary" onClick={onConfirm}>Confirm</button>
+          <button className="btn ghost" onClick={onCancel}>Cancel</button>
+        </div>
+    </ModalComp>
   );
 }
 
@@ -136,27 +168,28 @@ function EditModal({ isVisible, onConfirm, onCancel, card }) {
   if (!isVisible) return null;
 
   return (
-    <div className="modal">
-      <div className="modal-content">
-        <h3>Edit Modal</h3>
+    <ModalComp
+      title={"Edit Card"}
+      containerClassName=""
+      onClose={onCancel}
+    >
         <div>
           <label>Title</label>
-          <input placeholder="Enter cards Title" type="text"/>
+          <input id="title" placeholder={card.title} type="text"/>
           <label>Description</label>
-          <input placeholder="Enter cards Description" type="text"/>
+          <input id="description" placeholder={card.description} type="text"/>
           <label>Image</label>
-          <input placeholder="Enter cards Image" type="text"/>
+          <input id="image" placeholder={card.image} type="text"/>
           <label>Tag</label>
-          <input placeholder="Enter cards Tag" type="text"/>
+          <input id="tag" placeholder={card.tag} type="text"/>
           <label>Price</label>
-          <input placeholder="Enter Cards Price" type="number"/><span>$</span>
+          <input id="price" placeholder={card.price} type="number"/><span>$</span>
         </div>
         <div className="modal-actions">
-          <button className="btn primary" onClick={() => onConfirm(card.id)}>Confirm</button>
+          <button className="btn primary" onClick={() => onConfirm(card)}>Confirm</button>
           <button className="btn ghost" onClick={onCancel}>Cancel</button>
         </div>
-      </div>
-    </div>
+    </ModalComp>
   );
 }
 
@@ -164,15 +197,19 @@ function DeleteModal({ isVisible, onConfirm, onCancel, card }) {
   if (!isVisible) return null;
 
   return (
-    <div className="modal">
-      <div className="modal-content">
-        <h3>Are you sure you want to delete the card "{card.title}"?</h3>
-        <div className="modal-actions">
-          <button className="btn primary" onClick={() => onConfirm(card.id)}>Delete</button>
-          <button className="btn ghost" onClick={onCancel}>Cancel</button>
-        </div>
+    <ModalComp
+      title={"Delete Card"}
+      containerClassName=""
+      onClose={onCancel}
+    >
+      <p>
+        Are you sure want do delete {card.title}?
+      </p>
+      <div className="modal-actions">
+        <button className="btn primary" onClick={() => onConfirm(card.id)}>Delete</button>
+        <button className="btn ghost" onClick={onCancel}>Cancel</button>
       </div>
-    </div>
+    </ModalComp>
   );
 }
 
@@ -189,6 +226,8 @@ export default function App() {
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [cardToView, setCardToView] = useState(null);
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const handleLikeToggle = (cardId) => {
     setCards((prevCards) => prevCards.map((card) => card.id === cardId ? { ...card, isLiked: !card.isLiked } : card));
@@ -221,7 +260,13 @@ export default function App() {
 
   const handleEditConfirm = (card) => {
     setShowEditModal(false);
-    setCardToEdit(null)
+    setCardToEdit(null);
+
+    card.title = document.getElementById("title").value;
+    card.description = document.getElementById("description").value;
+    card.image = document.getElementById("image").value;
+    card.tag = document.getElementById("tag").value;
+    card.price = document.getElementById("price").value;
   };
 
   const handleEditCancel = () => {
@@ -237,6 +282,28 @@ export default function App() {
   const handleViewCancel = () => {
     setShowViewModal(false);
     setCardToView(null);
+  };
+
+    const handleCreateClick = () => {;
+    setShowCreateModal(true);
+  };
+
+  const handleCreateConfirm = (card) => {
+    setShowCreateModal(false);
+
+    setCards([...cards, {
+    id: cards[cards.length - 1].id + 1,
+    title: document.getElementById("title").value,
+    description: document.getElementById("description").value,
+    image: document.getElementById("image").value,
+    tag: document.getElementById("tag").value,
+    price: Number(document.getElementById("price").value),
+    isLiked: false,
+    }])
+  };
+
+  const handleCreateCancel = () => {
+    setShowCreateModal(false);
   };
 
   useEffect(() => {
@@ -265,12 +332,15 @@ export default function App() {
             <h2 id="explore" className="section-title">
               Explore
             </h2>
-            <select className="btn" value={sortMethod} onChange={handleSortMethodChange}>
-              <option value="">Sort by...</option>
-              <option value="lowToHigh">Price: Low to High</option>
-              <option value="highToLow">Price: High to Low</option>
-              <option value="a-z">Title: A-Z</option>
-            </select>
+              <div>
+              <select className="btn" value={sortMethod} onChange={handleSortMethodChange}>
+                <option value="">Sort by...</option>
+                <option value="lowToHigh">Price: Low to High</option>
+                <option value="highToLow">Price: High to Low</option>
+                <option value="a-z">Title: A-Z</option>
+              </select>
+              <button className="btn primary" onClick={handleCreateClick}>Add card</button>
+            </div>
           </div>
           <div className="grid">
             {cards.map((c) => (
@@ -307,6 +377,12 @@ export default function App() {
         onCancel={handleViewCancel}
         card={cardToView}
         onLikeToggle={handleLikeToggle}
+      />
+
+      <AddModal
+        isVisible={showCreateModal}
+        onConfirm={handleCreateConfirm}
+        onCancel={handleCreateCancel}
       />
     </>
   );
